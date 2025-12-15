@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>노트북 정보 등록 시스템</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700&display=swap');
+        body { font-family: 'Noto Sans KR', sans-serif; }
+    </style>
+</head>
+<body class="bg-gray-100 min-h-screen py-10 px-4 flex items-center justify-center">
+
+    <div class="bg-white rounded-xl shadow-xl overflow-hidden max-w-lg w-full">
+        <!-- 헤더 섹션 -->
+        <div class="bg-slate-800 py-6 px-8 text-center">
+            <h1 class="text-2xl font-bold text-white">노트북 자산 등록</h1>
+            <p class="text-slate-300 text-sm mt-1">지급받으신 노트북 정보를 입력해주세요.</p>
+        </div>
+
+        <form id="laptopForm" class="p-8 space-y-6">
+            
+            <!-- 입력 필드 그룹 -->
+            <div>
+                <label for="userName" class="block text-sm font-medium text-gray-700 mb-1">성함</label>
+                <input type="text" id="userName" name="userName" required placeholder="예: 김철수" 
+                    class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-slate-500 focus:border-slate-500 outline-none transition-all">
+            </div>
+
+            <div>
+                <label for="acquisitionDate" class="block text-sm font-medium text-gray-700 mb-1">취득일자 (또는 제조년월)</label>
+                <input type="date" id="acquisitionDate" name="acquisitionDate" required 
+                    class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-slate-500 focus:border-slate-500 outline-none transition-all">
+                <p class="text-xs text-gray-500 mt-1">* 노트북 뒷면 라벨 혹은 지급일을 확인해주세요.</p>
+            </div>
+
+            <div>
+                <label for="ipAddress" class="block text-sm font-medium text-gray-700 mb-1">IP 주소</label>
+                <input type="text" id="ipAddress" name="ipAddress" required placeholder="예: 192.168.0.15" 
+                    class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-slate-500 focus:border-slate-500 outline-none transition-all">
+            </div>
+
+            <div>
+                <label for="modelName" class="block text-sm font-medium text-gray-700 mb-1">모델명</label>
+                <input type="text" id="modelName" name="modelName" required placeholder="예: MacBook Pro 14, Galaxy Book 3" 
+                    class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-slate-500 focus:border-slate-500 outline-none transition-all">
+            </div>
+
+            <!-- 제출 버튼 -->
+            <button type="submit" id="submitBtn" class="w-full bg-slate-800 hover:bg-slate-900 text-white font-bold py-3 px-4 rounded-lg transition duration-200 flex justify-center items-center mt-4">
+                <span>등록하기</span>
+                <svg id="loadingIcon" class="hidden animate-spin ml-2 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                </svg>
+            </button>
+        </form>
+    </div>
+
+    <!-- 알림 모달 -->
+    <div id="modal" class="fixed inset-0 bg-black bg-opacity-50 hidden z-50 flex items-center justify-center">
+        <div class="bg-white p-6 rounded-lg shadow-2xl max-w-sm w-full mx-4 transform transition-all scale-100">
+            <h3 id="modalTitle" class="text-lg font-bold mb-2"></h3>
+            <p id="modalMessage" class="text-gray-600 mb-6 text-sm"></p>
+            <button onclick="closeModal()" class="w-full bg-slate-800 text-white py-2 rounded hover:bg-slate-900 transition-colors">확인</button>
+        </div>
+    </div>
+
+    <script>
+        // ==========================================
+        // 중요: 아래 URL을 Google Apps Script 배포 URL로 교체하세요
+        // ==========================================
+        const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbz15HtZJWfN8w8VBtjr04RWuPSLOLnGMSACwBmWRCjV-ldG7VjdByfZBw7eFPOrNkj0GA/exec';
+
+        const form = document.getElementById('laptopForm');
+        const submitBtn = document.getElementById('submitBtn');
+        const loadingIcon = document.getElementById('loadingIcon');
+        const modal = document.getElementById('modal');
+        const modalTitle = document.getElementById('modalTitle');
+        const modalMessage = document.getElementById('modalMessage');
+
+        form.addEventListener('submit', function(e) {
+            e.preventDefault();
+
+            if (SCRIPT_URL === 'YOUR_WEB_APP_URL_HERE') {
+                showModal('설정 오류', '스크립트 URL이 설정되지 않았습니다. 코드를 확인해주세요.', false);
+                return;
+            }
+
+            setLoading(true);
+
+            const formData = new FormData(form);
+            const data = Object.fromEntries(formData.entries());
+
+            fetch(SCRIPT_URL, {
+                method: 'POST',
+                body: JSON.stringify(data)
+            })
+            .then(response => response.json())
+            .then(result => {
+                if (result.result === 'success') {
+                    showModal('등록 완료', '노트북 정보가 안전하게 저장되었습니다.', true);
+                    form.reset();
+                } else {
+                    showModal('오류 발생', '저장 중 문제가 발생했습니다: ' + result.message, false);
+                }
+            })
+            .catch(error => {
+                showModal('전송 실패', '네트워크 오류가 발생했습니다. 잠시 후 다시 시도해주세요.', false);
+                console.error('Error:', error);
+            })
+            .finally(() => {
+                setLoading(false);
+            });
+        });
+
+        function setLoading(isLoading) {
+            submitBtn.disabled = isLoading;
+            const btnText = submitBtn.querySelector('span');
+            if (isLoading) {
+                btnText.innerText = '처리 중...';
+                loadingIcon.classList.remove('hidden');
+            } else {
+                btnText.innerText = '등록하기';
+                loadingIcon.classList.add('hidden');
+            }
+        }
+
+        function showModal(title, message, isSuccess) {
+            modalTitle.innerText = title;
+            modalTitle.className = isSuccess ? "text-lg font-bold mb-2 text-green-600" : "text-lg font-bold mb-2 text-red-600";
+            modalMessage.innerText = message;
+            modal.classList.remove('hidden');
+        }
+
+        function closeModal() {
+            modal.classList.add('hidden');
+        }
+    </script>
+</body>
+</html>
